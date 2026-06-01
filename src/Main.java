@@ -17,6 +17,17 @@ public class Main {
         Source premierSource = new Notification("Bienvenue", "notification mail");
         Source deuxiemeSource = new Action("Click", "action");
 
+        Function<Log<Source>, String> expensiveOperation =
+                log -> {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    return log.getMessage().toUpperCase();
+                };
+
         Log<Source> premierLog = new Log<>("log 1", premierSource, Status.INFO, "tag1", "tag2");
         Log<Source> deuxiemeLog = new Log<>("log 2", deuxiemeSource, Status.ERROR, "tag1", "tag2");
         Log<Source> troisiemeLog = new Log<>("log 3", premierSource, Status.INFO, "tag1", "tag2");
@@ -64,5 +75,17 @@ public class Main {
                         .flatMap(log -> log.getTags().stream())// transform List<Log> en List<List<String>>
                         .toList();
 
+        List<Log<Source>> bigLogs =
+                Stream.generate(() -> premierLog)
+                        .limit(10000)
+                        .toList();
+
+        List<String> newLogs = bigLogs
+                .parallelStream()
+                .filter(isBeforeNow)
+                .map(logToMessageUppercase)
+                .collect(Collectors.toList());
+
+        System.out.println(newLogs.size()); // insertions en parallèle
     }
 }

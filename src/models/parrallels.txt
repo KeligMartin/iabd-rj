@@ -1,0 +1,50 @@
+package models;
+
+import java.util.List;
+import java.util.stream.Stream;
+
+public class parrallels {
+
+    logs.parallelStream()
+            .forEach(log ->
+            System.out.println(
+            Thread.currentThread().getName()
+                                        + " -> "
+                                                + log.getMessage()
+                                                )
+                                                );
+
+    List<Log<Source>> bigLogs =
+            Stream.generate(() -> premierLog)
+                    .limit(5_000_000)
+                    .toList();
+
+
+    long start = System.currentTimeMillis();
+
+    long count = bigLogs.stream()
+            .filter(isError)
+            .count();
+
+System.out.println(System.currentTimeMillis() - start);
+
+
+    long start = System.currentTimeMillis();
+
+    long count = bigLogs.parallelStream()
+            .filter(isError)
+            .count();
+
+System.out.println(System.currentTimeMillis() - start);
+
+    Function<Log<Source>, String> expensiveOperation =
+            log -> {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                return log.getMessage().toUpperCase();
+            };
+}
