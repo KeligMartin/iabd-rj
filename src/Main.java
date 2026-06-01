@@ -60,10 +60,6 @@ public class Main {
                 .collect(Collectors.toSet())
                 ; // Stream<String>
 
-        Map<Status, Long> countByStatusContainingClick = logs
-                .stream()
-                .filter(containsClick)
-                .collect(Collectors.groupingBy(log -> log.getStatus(), Collectors.counting()));
 
         Set<Log<Source>> errorLogs = logs
                 .stream()
@@ -77,7 +73,7 @@ public class Main {
 
         List<Log<Source>> bigLogs =
                 Stream.generate(() -> premierLog)
-                        .limit(10000)
+                        .limit(5_000_000)
                         .toList();
 
         List<String> newLogs = bigLogs
@@ -87,5 +83,14 @@ public class Main {
                 .collect(Collectors.toList());
 
         System.out.println(newLogs.size()); // insertions en parallèle
+        long start = System.currentTimeMillis();
+
+        Map<Status, Long> countByStatusContainingClick = bigLogs
+                .parallelStream()
+                .collect(Collectors.groupingByConcurrent(log -> log.getStatus(), Collectors.counting())); // groupement à la fin
+
+
+        System.out.println(System.currentTimeMillis() - start);
+
     }
 }
